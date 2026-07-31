@@ -1,13 +1,317 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cube</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <title>Cube APOD</title>
+  <style>
+    :root {
+      --bg-dark: #07070b;
+      --glass-bg: rgba(15, 15, 25, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --accent: #7c3aed;
+      --accent-hover: #6d28d9;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 30px 20px;
+      position: relative;
+    }
+
+    #bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.3);
+      z-index: -1;
+      transition: background-image 0.5s ease-in-out;
+    }
+
+    header {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    h1.app-title {
+      font-size: 1.4rem;
+      letter-spacing: 3px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-main);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      background: var(--glass-bg);
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    button, input[type="date"] {
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    #randomBtn {
+      background: var(--accent);
+      border-color: transparent;
+    }
+
+    #randomBtn:hover {
+      background: var(--accent-hover);
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .image-section {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 350px;
+    }
+
+    #apodImage {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .details-section {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .meta-info {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #title {
+      font-size: 1.5rem;
+      line-height: 1.2;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    #desc {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+      overflow-y: auto;
+      max-height: 200px;
+    }
+
+    #copy {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      opacity: 0.8;
+      border-top: 1px solid var(--glass-border);
+      padding-top: 10px;
+    }
+
+    .watermark {
+      position: fixed;
+      bottom: 12px;
+      right: 16px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      opacity: 0.6;
+      letter-spacing: 1px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+      body { padding: 15px 10px; }
+      .image-section { min-height: 250px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="bg"></div>
+
+  <header>
+    <h1 class="app-title">Cube APOD</h1>
+    <div class="controls">
+      <button onclick="changeDay(-1)">Prev</button>
+      <input type="date" id="datePicker" onchange="getData(this.value)">
+      <button onclick="changeDay(1)">Next</button>
+      <button id="randomBtn" onclick="getRandom()">Random</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="image-section">
+      <img id="apodImage" src="" alt="Astronomy Picture of the Day">
+    </div>
+
+    <div class="details-section">
+      <div>
+        <div class="meta-info">
+          <span id="dateText"></span>
+        </div>
+        <h2 id="title">Loading...</h2>
+        <p id="desc"></p>
+      </div>
+      <div>
+        <small id="copy"></small>
+      </div>
+    </div>
+  </div>
+
+  <div class="watermark">made by rizz</div>
+
+  <script>
+    const apiKey = "DEMO_KEY";
+    
+    function getLocalDateString(d = new Date()) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    const today = getLocalDateString();
+    
+    document.getElementById("datePicker").max = today;
+    document.getElementById("datePicker").value = today;
+
+    const fallback = {
+      title: "Cosmic Fallback View",
+      explanation: "API limit hit or offline, so here is a local backup image so the page doesn't break.",
+      url: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=2000&auto=format&fit=crop",
+      copyright: "Public Domain"
+    };
+
+    async function getData(d) {
+      document.getElementById("title").textContent = "Loading...";
+      document.getElementById("desc").textContent = "";
+      document.getElementById("copy").textContent = "";
+      document.getElementById("dateText").textContent = "";
+      
+      try {
+        let res = await fetch(`https://api.nasa.gov/planetary/apod?api_key=${apiKey}&date=${d}`);
+        let json = await res.json();
+        
+        if (!res.ok) throw new Error(json.msg || "API failed");
+
+        document.getElementById("dateText").textContent = json.date;
+        document.getElementById("title").textContent = json.title;
+        document.getElementById("desc").textContent = json.explanation;
+        document.getElementById("copy").textContent = json.copyright ? "© " + json.copyright : "";
+        
+        let targetUrl = json.media_type === "image" ? json.url : fallback.url;
+        document.getElementById("apodImage").src = targetUrl;
+        document.getElementById("bg").style.backgroundImage = `url('${targetUrl}')`;
+
+      } catch (err) {
+        console.log("Oops, error fetching, using local stuff instead:", err);
+        document.getElementById("dateText").textContent = d;
+        document.getElementById("title").textContent = fallback.title;
+        document.getElementById("desc").textContent = fallback.explanation;
+        document.getElementById("copy").textContent = fallback.copyright;
+        document.getElementById("apodImage").src = fallback.url;
+        document.getElementById("bg").style.backgroundImage = `url('${fallback.url}')`;
+      }
+    }
+
+    function changeDay(num) {
+      let val = document.getElementById("datePicker").value;
+      let curr = val ? new Date(val + 'T00:00:00') : new Date();
+      curr.setDate(curr.getDate() + num);
+      let newD = getLocalDateString(curr);
+      if (newD <= today) {
+        document.getElementById("datePicker").value = newD;
+        getData(newD);
+      }
+    }
+
+    function getRandom() {
+      let start = new Date(1995, 5, 16).getTime();
+      let end = new Date().getTime();
+      let randDate = getLocalDateString(new Date(start + Math.random() * (end - start)));
+      document.getElementById("datePicker").value = randDate;
+      getData(randDate);
+    }
+
+    getData(today);
+  </script>
+
+</body>
 </html>
