@@ -11,3 +11,4 @@ it uses `DEMO_KEY` by default, but nasa's rate limits on that are pretty low. if
 3. find this line near the bottom:
    ```javascript
    const apiKey = "DEMO_KEY";
+4. added some new eastereggs.....
